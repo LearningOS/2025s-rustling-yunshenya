@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -70,13 +69,71 @@ impl<T> LinkedList<T> {
         }
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+    where
+        T: PartialOrd,
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+        let mut merged = LinkedList::new();
+
+        // Collect elements from list_a
+        let mut a_values = Vec::new();
+        let mut current = list_a.start;
+        while let Some(ptr) = current {
+            unsafe {
+                let node = Box::from_raw(ptr.as_ptr());
+                a_values.push(node.val);
+                current = node.next;
+            }
         }
+
+        // Collect elements from list_b
+        let mut b_values = Vec::new();
+        let mut current = list_b.start;
+        while let Some(ptr) = current {
+            unsafe {
+                let node = Box::from_raw(ptr.as_ptr());
+                b_values.push(node.val);
+                current = node.next;
+            }
+        }
+
+        // Merge the two vectors into the merged list
+        let mut a_iter = a_values.into_iter();
+        let mut b_iter = b_values.into_iter();
+        let mut a_peek = a_iter.next();
+        let mut b_peek = b_iter.next();
+
+        loop {
+            match (a_peek.take(), b_peek.take()) {
+                (Some(a), Some(b)) => {
+                    if a <= b {
+                        merged.add(a);
+                        a_peek = a_iter.next();
+                        b_peek = Some(b);
+                    } else {
+                        merged.add(b);
+                        b_peek = b_iter.next();
+                        a_peek = Some(a);
+                    }
+                }
+                (Some(a), None) => {
+                    merged.add(a);
+                    for val in a_iter {
+                        merged.add(val);
+                    }
+                    break;
+                }
+                (None, Some(b)) => {
+                    merged.add(b);
+                    for val in b_iter {
+                        merged.add(val);
+                    }
+                    break;
+                }
+                (None, None) => break,
+            }
+        }
+
+        merged
 	}
 }
 
